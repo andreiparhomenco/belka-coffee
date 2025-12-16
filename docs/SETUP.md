@@ -83,7 +83,7 @@ supabase db push
 ```
 /setmenubutton
 → выберите вашего бота
-→ URL: https://your-app.vercel.app
+→ URL: https://belka-coffee.vercel.app (или ваш URL после деплоя)
 → Text: Открыть приложение
 ```
 

@@ -53,7 +53,7 @@ admin - Админ панель (только для админов)
 ```
 /setmenubutton
 → выберите бота
-→ введите URL: https://your-app.vercel.app
+→ введите URL: https://belka-coffee.vercel.app (или ваш URL после деплоя)
 → введите текст: Открыть приложение
 ```
 
@@ -296,7 +296,7 @@ async function sendMessageWithButtons(chatId: number, text: string) {
           [
             {
               text: '📱 Открыть приложение',
-              web_app: { url: 'https://your-app.vercel.app' },
+              web_app: { url: 'https://belka-coffee.vercel.app' },
             },
           ],
         ],

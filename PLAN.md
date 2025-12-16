@@ -733,10 +733,16 @@ test('50 бариста одновременно открывают график
 
 3. ✅ **Настроить репозиторий**
    ```bash
+   git clone https://github.com/andreiparhomenco/belka-coffee.git
+   cd belka-coffee
+   ```
+   
+   Или создать с нуля:
+   ```bash
    mkdir belka-coffee
    cd belka-coffee
    git init
-   git remote add origin https://github.com/your-username/belka-coffee.git
+   git remote add origin https://github.com/andreiparhomenco/belka-coffee.git
    ```
 
 4. ✅ **Инициализировать Frontend**

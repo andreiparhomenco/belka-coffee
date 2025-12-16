@@ -46,7 +46,7 @@ cd belka-coffee
    ```
    /setmenubutton
    Выберите бота
-   URL: https://your-app.vercel.app
+   URL: https://belka-coffee.vercel.app (или ваш URL после деплоя)
    Text: Открыть приложение
    ```
 
@@ -180,15 +180,15 @@ MIT License - см. файл [LICENSE](LICENSE)
 
 ## 👥 Авторы
 
-- Ваше имя - [@your_username](https://t.me/your_username)
+- Andrei Parhomenco - [@andreiparhomenco](https://github.com/andreiparhomenco)
 
 ## 📞 Поддержка
 
 Если у вас возникли вопросы или проблемы:
 
-- 📧 Email: your-email@example.com
-- 💬 Telegram: [@your_username](https://t.me/your_username)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/belka-coffee/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/andreiparhomenco/belka-coffee/issues)
+- 💬 Telegram: Создайте issue в репозитории
+- 📧 GitHub: [@andreiparhomenco](https://github.com/andreiparhomenco)
 
 ---
 
