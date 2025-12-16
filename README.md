@@ -25,7 +25,7 @@ Telegram Mini App для автоматизации управления гра�
 ### Шаг 1: Клонирование репозитория
 
 ```bash
-git clone https://github.com/your-username/belka-coffee.git
+git clone https://github.com/andreiparhomenco/belka-coffee.git
 cd belka-coffee
 ```
 
