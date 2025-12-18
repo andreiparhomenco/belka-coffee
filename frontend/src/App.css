@@ -1,102 +1,399 @@
-.app {
+/* ============================================
+ * Main App Styles
+ * Description: Стили для главного приложения
+ * Created: 2025-12-18
+ * ============================================ */
+
+:root {
+  /* Telegram Theme Colors */
+  --tg-theme-bg-color: #ffffff;
+  --tg-theme-text-color: #000000;
+  --tg-theme-hint-color: #999999;
+  --tg-theme-link-color: #2481cc;
+  --tg-theme-button-color: #2481cc;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #f4f4f5;
+  
+  /* Custom Colors */
+  --primary-color: #2481cc;
+  --success-color: #4caf50;
+  --error-color: #f44336;
+  --warning-color: #ff9800;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+}
+
+/* App Container */
+.app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  background: var(--tg-theme-bg-color);
+}
+
+.app-container.loading,
+.app-container.error {
   justify-content: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  align-items: center;
+  padding: var(--spacing-lg);
 }
 
-.app-header {
+/* Loading State */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--tg-theme-hint-color);
+  border-top-color: var(--tg-theme-button-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.app-container.loading p {
+  color: var(--tg-theme-hint-color);
+  font-size: 14px;
+}
+
+/* Error State */
+.error-card {
+  background: var(--tg-theme-secondary-bg-color);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
   text-align: center;
-  margin-bottom: 2rem;
+  max-width: 400px;
 }
 
-.app-header h1 {
-  font-size: 3rem;
-  margin: 0;
-  font-weight: bold;
+.error-card h2 {
+  margin-bottom: var(--spacing-md);
+  color: var(--error-color);
 }
 
-.app-header p {
-  font-size: 1.2rem;
-  margin: 0.5rem 0 0 0;
-  opacity: 0.9;
+.error-card p {
+  margin-bottom: var(--spacing-lg);
+  color: var(--tg-theme-hint-color);
 }
 
-.app-main {
-  flex: 1;
+/* Header */
+.app-header {
+  background: var(--tg-theme-secondary-bg-color);
+  border-bottom: 1px solid var(--tg-theme-hint-color);
+  padding: var(--spacing-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
-  max-width: 500px;
-  width: 100%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.card h2 {
-  margin-top: 0;
-  font-size: 2rem;
-}
-
-.card p {
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-
-.counter {
-  margin: 2rem 0;
-  text-align: center;
-}
-
-.counter button {
-  background: white;
-  color: #667eea;
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  cursor: pointer;
+  font-size: 20px;
   font-weight: 600;
-  transition: all 0.3s;
 }
 
-.counter button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.user-details h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.info {
-  margin-top: 2rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  text-align: center;
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
+.role-badge.admin {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.role-badge.barista {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.btn-logout {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+
+.btn-logout:hover {
+  background: var(--tg-theme-hint-color);
+}
+
+/* Navigation */
+.app-nav {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--tg-theme-bg-color);
+  border-bottom: 1px solid var(--tg-theme-hint-color);
+  position: sticky;
+  top: 81px; /* высота header */
+  z-index: 99;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: var(--spacing-md);
+  border: 1px solid var(--tg-theme-hint-color);
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  background: var(--tg-theme-hint-color);
+}
+
+.nav-btn.active {
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border-color: var(--tg-theme-button-color);
+}
+
+/* Main Content */
+.app-main {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+/* Profile View */
+.profile-view {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profile-view h2 {
+  margin-bottom: var(--spacing-lg);
+  font-size: 24px;
+}
+
+.profile-card,
+.telegram-info {
+  background: var(--tg-theme-secondary-bg-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.telegram-info h3 {
+  margin-bottom: var(--spacing-md);
+  font-size: 18px;
+}
+
+.profile-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--tg-theme-hint-color);
+}
+
+.profile-item:last-child {
+  border-bottom: none;
+}
+
+.profile-item .label {
+  font-weight: 500;
+  color: var(--tg-theme-hint-color);
+}
+
+.profile-item .value {
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+}
+
+/* Footer */
 .app-footer {
-  margin-top: 2rem;
+  background: var(--tg-theme-secondary-bg-color);
+  border-top: 1px solid var(--tg-theme-hint-color);
+  padding: var(--spacing-lg);
   text-align: center;
-  opacity: 0.8;
-  font-size: 0.9rem;
+  margin-top: auto;
 }
 
+.app-footer p {
+  margin: var(--spacing-xs) 0;
+  font-size: 13px;
+  color: var(--tg-theme-hint-color);
+}
+
+.version {
+  font-size: 11px !important;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  border: 1px solid var(--tg-theme-hint-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--tg-theme-hint-color);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .app-header h1 {
-    font-size: 2rem;
+  .app-header {
+    padding: var(--spacing-sm);
   }
-  
-  .card {
-    padding: 1.5rem;
+
+  .user-details h3 {
+    font-size: 14px;
+  }
+
+  .role-badge {
+    font-size: 11px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .app-nav {
+    padding: var(--spacing-sm);
+    top: 65px;
+  }
+
+  .nav-btn {
+    padding: var(--spacing-sm);
+    font-size: 13px;
+  }
+
+  .app-main {
+    padding: var(--spacing-sm);
+  }
+
+  .profile-view h2 {
+    font-size: 20px;
+  }
+
+  .profile-card,
+  .telegram-info {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .user-info {
+    gap: var(--spacing-sm);
+  }
+
+  .user-details h3 {
+    font-size: 13px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .profile-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
   }
 }
