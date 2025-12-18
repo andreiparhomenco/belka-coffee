@@ -48,3 +48,4 @@ temp/
 BOT_INFO.md
 frontend/.env.example
 
+.vercel

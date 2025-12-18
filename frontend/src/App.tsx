@@ -1,30 +1,43 @@
 // ============================================
 // Main App Component
-// Description: Главный компонент Telegram Mini App
-// Created: 2025-12-18
+// Description: Главный компонент веб-приложения
+// Updated: 2025-12-18 - Переход на веб-версию (без Telegram)
 // ============================================
 
 import { useEffect, useState } from 'react';
-import { useTelegram } from './hooks/useTelegram';
-import { autoAuthFromTelegram, getCurrentUser, logout, type User } from './lib/auth';
+import { checkSession, getCurrentUser, signOut, type User } from './lib/auth';
+import { Login } from './components/Login';
 import { AvailabilityCalendar } from './components/AvailabilityCalendar';
 import { AvailabilityOverview } from './components/AvailabilityOverview';
 import { ScheduleGenerator } from './components/ScheduleGenerator';
 import { ScheduleView } from './components/ScheduleView';
+import { Dashboard, UserManagement, ShiftEditor, Reports, Settings } from './components/admin';
 import './App.css';
 import './components/AvailabilityCalendar.css';
 import './components/AvailabilityOverview.css';
 import './components/ScheduleGenerator.css';
 import './components/ScheduleView.css';
+import './components/admin/Dashboard.css';
+import './components/admin/UserManagement.css';
+import './components/admin/ShiftEditor.css';
+import './components/admin/Reports.css';
+import './components/admin/Settings.css';
 
 function App() {
-  const { webApp, user: tgUser } = useTelegram();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'availability' | 'schedule' | 'profile'>('availability');
+  const [view, setView] = useState<'dashboard' | 'availability' | 'schedule' | 'users' | 'editor' | 'reports' | 'settings' | 'profile'>(
+    'availability'
+  );
 
-  // Авторизация при загрузке
+  // Установка начального view в зависимости от роли
+  useEffect(() => {
+    if (user && user.role === 'admin' && view === 'availability') {
+      setView('dashboard');
+    }
+  }, [user]);
+
+  // Проверка сессии при загрузке
   useEffect(() => {
     const init = async () => {
       // Проверяем есть ли пользователь в localStorage
@@ -35,43 +48,38 @@ function App() {
         return;
       }
 
-      // Если нет, пробуем авторизоваться через Telegram
-      try {
-        const result = await autoAuthFromTelegram();
-        if (result.success && result.user) {
-          setUser(result.user);
-        } else {
-          setError(result.error || 'Не удалось авторизоваться');
-        }
-      } catch (err) {
-        console.error('Ошибка авторизации:', err);
-        setError('Произошла ошибка при авторизации');
-      } finally {
-        setLoading(false);
+      // Проверяем сессию в Supabase
+      const result = await checkSession();
+      if (result.success && result.user) {
+        setUser(result.user);
       }
+      
+      setLoading(false);
     };
 
     init();
+  }, []);
 
-    // Настройка Telegram WebApp
-    if (webApp) {
-      webApp.ready();
-      webApp.expand();
-      
-      // Настройка главной кнопки
-      webApp.MainButton.setText('Сохранить доступность');
-      webApp.MainButton.hide();
-    }
-  }, [webApp]);
-
-  const handleLogout = () => {
-    logout();
-    setUser(null);
-    if (webApp) {
-      webApp.close();
+  const handleLoginSuccess = () => {
+    const user = getCurrentUser();
+    if (user) {
+      setUser(user);
+      // Устанавливаем начальный view в зависимости от роли
+      if (user.role === 'admin') {
+        setView('dashboard');
+      } else {
+        setView('availability');
+      }
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    setUser(null);
+    setView('availability');
+  };
+
+  // Если загрузка - показываем спиннер
   if (loading) {
     return (
       <div className="app-container loading">
@@ -81,20 +89,12 @@ function App() {
     );
   }
 
-  if (error || !user) {
-    return (
-      <div className="app-container error">
-        <div className="error-card">
-          <h2>❌ Ошибка</h2>
-          <p>{error || 'Не удалось загрузить приложение'}</p>
-          <button onClick={() => window.location.reload()} className="btn btn-primary">
-            Попробовать снова
-          </button>
-        </div>
-      </div>
-    );
+  // Если нет пользователя - показываем Login
+  if (!user) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
+  // Главное приложение
   return (
     <div className="app-container">
       {/* Header */}
@@ -112,35 +112,92 @@ function App() {
             </div>
           </div>
           <button onClick={handleLogout} className="btn-logout" title="Выйти">
-            🚪
+            🚪 Выйти
           </button>
         </div>
       </header>
 
       {/* Navigation */}
       <nav className="app-nav">
-        <button
-          className={`nav-btn ${view === 'availability' ? 'active' : ''}`}
-          onClick={() => setView('availability')}
-        >
-          📅 Доступность
-        </button>
-        <button
-          className={`nav-btn ${view === 'schedule' ? 'active' : ''}`}
-          onClick={() => setView('schedule')}
-        >
-          📆 График
-        </button>
-        <button
-          className={`nav-btn ${view === 'profile' ? 'active' : ''}`}
-          onClick={() => setView('profile')}
-        >
-          👤 Профиль
-        </button>
+        {user.role === 'admin' ? (
+          <>
+            <button
+              className={`nav-btn ${view === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setView('dashboard')}
+            >
+              📊 Панель
+            </button>
+            <button
+              className={`nav-btn ${view === 'availability' ? 'active' : ''}`}
+              onClick={() => setView('availability')}
+            >
+              📅 Доступность
+            </button>
+            <button
+              className={`nav-btn ${view === 'schedule' ? 'active' : ''}`}
+              onClick={() => setView('schedule')}
+            >
+              📆 График
+            </button>
+            <button
+              className={`nav-btn ${view === 'users' ? 'active' : ''}`}
+              onClick={() => setView('users')}
+            >
+              👥 Бариста
+            </button>
+            <button
+              className={`nav-btn ${view === 'editor' ? 'active' : ''}`}
+              onClick={() => setView('editor')}
+            >
+              ✏️ Редактор
+            </button>
+            <button
+              className={`nav-btn ${view === 'reports' ? 'active' : ''}`}
+              onClick={() => setView('reports')}
+            >
+              📊 Отчёты
+            </button>
+            <button
+              className={`nav-btn ${view === 'settings' ? 'active' : ''}`}
+              onClick={() => setView('settings')}
+            >
+              ⚙️ Настройки
+            </button>
+            <button
+              className={`nav-btn ${view === 'profile' ? 'active' : ''}`}
+              onClick={() => setView('profile')}
+            >
+              👤 Профиль
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className={`nav-btn ${view === 'availability' ? 'active' : ''}`}
+              onClick={() => setView('availability')}
+            >
+              📅 Доступность
+            </button>
+            <button
+              className={`nav-btn ${view === 'schedule' ? 'active' : ''}`}
+              onClick={() => setView('schedule')}
+            >
+              📆 График
+            </button>
+            <button
+              className={`nav-btn ${view === 'profile' ? 'active' : ''}`}
+              onClick={() => setView('profile')}
+            >
+              👤 Профиль
+            </button>
+          </>
+        )}
       </nav>
 
       {/* Main Content */}
       <main className="app-main">
+        {view === 'dashboard' && user.role === 'admin' && <Dashboard />}
+
         {view === 'availability' && (
           <>
             {user.role === 'admin' ? (
@@ -172,6 +229,14 @@ function App() {
           </>
         )}
 
+        {view === 'users' && user.role === 'admin' && <UserManagement />}
+
+        {view === 'editor' && user.role === 'admin' && <ShiftEditor />}
+
+        {view === 'reports' && user.role === 'admin' && <Reports />}
+
+        {view === 'settings' && user.role === 'admin' && <Settings />}
+
         {view === 'profile' && (
           <div className="profile-view">
             <h2>👤 Мой профиль</h2>
@@ -181,14 +246,14 @@ function App() {
                 <span className="value">{user.name}</span>
               </div>
               <div className="profile-item">
-                <span className="label">Роль:</span>
-                <span className="value">
-                  {user.role === 'admin' ? 'Администратор' : 'Бариста'}
-                </span>
+                <span className="label">Email:</span>
+                <span className="value">{user.email}</span>
               </div>
               <div className="profile-item">
-                <span className="label">Telegram ID:</span>
-                <span className="value">{user.telegram_id}</span>
+                <span className="label">Роль:</span>
+                <span className="value">
+                  {user.role === 'admin' ? '👑 Администратор' : '☕ Бариста'}
+                </span>
               </div>
               <div className="profile-item">
                 <span className="label">Дата регистрации:</span>
@@ -197,20 +262,6 @@ function App() {
                 </span>
               </div>
             </div>
-
-            {tgUser && (
-              <div className="telegram-info">
-                <h3>📱 Telegram</h3>
-                <div className="profile-item">
-                  <span className="label">Username:</span>
-                  <span className="value">@{tgUser.username || 'не указан'}</span>
-                </div>
-                <div className="profile-item">
-                  <span className="label">Язык:</span>
-                  <span className="value">{tgUser.language_code || 'не указан'}</span>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </main>
@@ -218,7 +269,7 @@ function App() {
       {/* Footer */}
       <footer className="app-footer">
         <p>Belka Coffee © 2025</p>
-        <p className="version">v1.0.0 • Этап 2</p>
+        <p className="version">v1.0.0 MVP • Веб-версия</p>
       </footer>
     </div>
   );

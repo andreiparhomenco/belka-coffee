@@ -35,8 +35,13 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
   const user = getCurrentUser();
+  
+  // Вычисляем weekStart один раз
+  const [currentWeekStart] = useState(() => 
+    getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart)
+  );
+  const [currentWeekStartDate] = useState(() => new Date(currentWeekStart));
 
   // Загрузка шаблона работы кофейни
   useEffect(() => {
@@ -48,14 +53,18 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     if (user) {
       loadAvailability();
     }
-  }, [user, currentWeekStart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadShopTemplate = async () => {
     try {
+      console.log('📋 Загрузка шаблона работы кофейни...');
       const { data, error } = await supabase
         .from('shop_template')
         .select('day_of_week, hour, is_active')
         .eq('is_active', true);
+
+      console.log('📋 Шаблон загружен:', { data, error });
 
       if (error) throw error;
 
@@ -64,16 +73,21 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         template.set(`${slot.day_of_week}-${slot.hour}`, true);
       });
 
+      console.log('✅ Шаблон обработан, слотов:', template.size);
       setShopTemplate(template);
     } catch (err) {
-      console.error('Ошибка загрузки шаблона:', err);
+      console.error('❌ Ошибка загрузки шаблона:', err);
       setError('Не удалось загрузить график работы кофейни');
     }
   };
 
   const loadAvailability = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('⚠️ Нет пользователя, пропускаем загрузку');
+      return;
+    }
 
+    console.log('📅 Загрузка доступности для:', { userId: user.id, weekStart: currentWeekStart });
     setLoading(true);
     setError(null);
 
@@ -82,7 +96,9 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         .from('availability')
         .select('day_of_week, hour')
         .eq('user_id', user.id)
-        .eq('week_start', currentWeekStart.toISOString().split('T')[0]);
+        .eq('week_start', currentWeekStart);
+
+      console.log('📅 Доступность загружена:', { data, error });
 
       if (error) throw error;
 
@@ -104,11 +120,13 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         }
       }
 
+      console.log('✅ Слоты созданы:', newSlots.length);
       setSlots(newSlots);
     } catch (err) {
-      console.error('Ошибка загрузки доступности:', err);
+      console.error('❌ Ошибка загрузки доступности:', err);
       setError('Не удалось загрузить вашу доступность');
     } finally {
+      console.log('🏁 Загрузка завершена, loading = false');
       setLoading(false);
     }
   };
@@ -182,11 +200,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       const selectedSlots = slots
         .filter(slot => slot.isSelected)
         .map(slot => ({
-          user_id: user.id,
-          week_start: currentWeekStart.toISOString().split('T')[0],
-          day_of_week: slot.day,
-          hour: slot.hour,
-        }));
+        user_id: user.id,
+        week_start: currentWeekStart,
+        day_of_week: slot.day,
+        hour: slot.hour,
+      }));
 
       if (selectedSlots.length > 0) {
         const { error: insertError } = await supabase
@@ -202,7 +220,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.showPopup({
           title: '✅ Сохранено',
-          message: `Доступность на неделю ${currentWeekStart.toLocaleDateString()} сохранена!`,
+          message: `Доступность на неделю ${currentWeekStartDate.toLocaleDateString()} сохранена!`,
           buttons: [{ type: 'ok' }],
         });
       }
@@ -240,8 +258,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       <div className="calendar-header">
         <h2>📅 Моя доступность</h2>
         <p className="week-info">
-          Неделя: {currentWeekStart.toLocaleDateString('ru-RU')} -{' '}
-          {new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')}
+          Неделя: {currentWeekStartDate.toLocaleDateString('ru-RU')} -{' '}
+          {new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')}
         </p>
         <p className="selected-count">
           Выбрано: <strong>{getTotalSelectedCount()}</strong> часов

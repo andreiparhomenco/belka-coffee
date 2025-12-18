@@ -1,70 +1,190 @@
 // ============================================
-// Auth Helper для Telegram Mini App
-// Description: Функции для авторизации через Telegram
-// Created: 2025-12-15
+// Auth Helper для веб-приложения
+// Description: Функции для авторизации через email/password
+// Updated: 2025-12-18 - Переход на веб-версию (без Telegram)
 // ============================================
 
-const TELEGRAM_AUTH_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`;
+import { supabase } from './supabase';
 
 export interface User {
   id: string;
-  telegram_id: number;
+  email: string;
   name: string;
   role: 'barista' | 'admin';
   created_at: string;
 }
 
-export interface TelegramAuthResponse {
+export interface AuthResponse {
   success: boolean;
   user?: User;
   error?: string;
 }
 
 /**
- * Авторизация пользователя через Telegram ID
- * @param telegram_id - ID пользователя в Telegram
- * @param name - Полное имя пользователя
- * @param username - Username в Telegram (опционально)
+ * Вход через email и пароль
+ * @param email - Email пользователя
+ * @param password - Пароль
  * @returns Объект пользователя или ошибка
  */
-export async function telegramAuth(
-  telegram_id: number,
-  name: string,
-  username?: string
-): Promise<TelegramAuthResponse> {
+export async function signIn(email: string, password: string): Promise<AuthResponse> {
   try {
-    const response = await fetch(TELEGRAM_AUTH_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({
-        telegram_id,
-        name,
-        username,
-      }),
+    console.log('🔐 Попытка входа:', email);
+    console.log('📦 Supabase клиент:', supabase ? 'OK' : 'НЕТ');
+    
+    // 1. Авторизация через Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    const data: TelegramAuthResponse = await response.json();
+    console.log('📊 Результат Auth:', { authData, authError });
 
-    if (data.success && data.user) {
-      // Сохраняем пользователя в localStorage
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('user_id', data.user.id);
-      localStorage.setItem('telegram_id', data.user.telegram_id.toString());
-      
-      return data;
-    } else {
-      console.error('Ошибка авторизации:', data.error);
-      return data;
+    if (authError) {
+      console.error('❌ Ошибка авторизации:', authError);
+      return {
+        success: false,
+        error: authError.message === 'Invalid login credentials' 
+          ? 'Неверный email или пароль'
+          : authError.message,
+      };
     }
+
+    if (!authData.user) {
+      return {
+        success: false,
+        error: 'Не удалось получить данные пользователя',
+      };
+    }
+
+    // 2. Получаем профиль из таблицы users
+    console.log('📝 Получаем профиль для:', email);
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id, email, name, role, created_at')
+      .eq('email', email)
+      .single();
+
+    console.log('👤 Данные профиля:', { userData, userError });
+
+    if (userError || !userData) {
+      console.error('❌ Ошибка получения профиля:', userError);
+      return {
+        success: false,
+        error: 'Профиль пользователя не найден',
+      };
+    }
+
+    // 3. Сохраняем в localStorage
+    const user: User = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role,
+      created_at: userData.created_at,
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    console.log('✅ Вход успешен!', user);
+    
+    return {
+      success: true,
+      user,
+    };
   } catch (error) {
-    console.error('Ошибка при авторизации:', error);
+    console.error('💥 Критическая ошибка при входе:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Неизвестная ошибка',
     };
+  }
+}
+
+/**
+ * Регистрация нового пользователя (для будущего расширения)
+ * @param email - Email
+ * @param password - Пароль
+ * @param name - Имя
+ * @returns Результат регистрации
+ */
+export async function signUp(
+  email: string,
+  password: string,
+  name: string
+): Promise<AuthResponse> {
+  try {
+    // 1. Создание пользователя в Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) {
+      return {
+        success: false,
+        error: authError.message,
+      };
+    }
+
+    if (!authData.user) {
+      return {
+        success: false,
+        error: 'Не удалось создать пользователя',
+      };
+    }
+
+    // 2. Создание профиля в таблице users
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({
+        id: authData.user.id,
+        email,
+        name,
+        role: 'barista', // По умолчанию новые пользователи - бариста
+      })
+      .select()
+      .single();
+
+    if (userError || !userData) {
+      return {
+        success: false,
+        error: 'Не удалось создать профиль',
+      };
+    }
+
+    const user: User = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role,
+      created_at: userData.created_at,
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+
+    return {
+      success: true,
+      user,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Неизвестная ошибка',
+    };
+  }
+}
+
+/**
+ * Выход из системы
+ */
+export async function signOut(): Promise<void> {
+  try {
+    await supabase.auth.signOut();
+    localStorage.removeItem('user');
+  } catch (error) {
+    console.error('Ошибка при выходе:', error);
+    // Всё равно очищаем localStorage
+    localStorage.removeItem('user');
   }
 }
 
@@ -102,54 +222,71 @@ export function isBarista(): boolean {
 }
 
 /**
- * Выйти из системы (очистить localStorage)
+ * Проверить сессию и восстановить пользователя
+ * Вызывается при загрузке приложения
  */
-export function logout(): void {
-  localStorage.removeItem('user');
-  localStorage.removeItem('user_id');
-  localStorage.removeItem('telegram_id');
-}
+export async function checkSession(): Promise<AuthResponse> {
+  try {
+    // Проверяем сессию в Supabase
+    const { data: { session }, error } = await supabase.auth.getSession();
 
-/**
- * Автоматическая авторизация через Telegram WebApp
- * Вызывается при запуске Mini App
- */
-export async function autoAuthFromTelegram(): Promise<TelegramAuthResponse> {
-  const tg = window.Telegram?.WebApp;
-  
-  if (!tg) {
+    if (error || !session) {
+      // Нет активной сессии - очищаем localStorage
+      localStorage.removeItem('user');
+      return {
+        success: false,
+        error: 'Нет активной сессии',
+      };
+    }
+
+    // Есть сессия - получаем профиль
+    const email = session.user.email;
+    if (!email) {
+      return {
+        success: false,
+        error: 'Email не найден в сессии',
+      };
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id, email, name, role, created_at')
+      .eq('email', email)
+      .single();
+
+    if (userError || !userData) {
+      return {
+        success: false,
+        error: 'Профиль не найден',
+      };
+    }
+
+    const user: User = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role,
+      created_at: userData.created_at,
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+
+    return {
+      success: true,
+      user,
+    };
+  } catch (error) {
     return {
       success: false,
-      error: 'Telegram WebApp API недоступен',
+      error: error instanceof Error ? error.message : 'Неизвестная ошибка',
     };
   }
-
-  const user = tg.initDataUnsafe?.user;
-  
-  if (!user || !user.id) {
-    return {
-      success: false,
-      error: 'Не удалось получить данные пользователя из Telegram',
-    };
-  }
-
-  // Собираем имя
-  const name = [user.first_name, user.last_name]
-    .filter(Boolean)
-    .join(' ') || 'Без имени';
-
-  // Авторизуемся
-  return await telegramAuth(
-    user.id,
-    name,
-    user.username
-  );
 }
 
 /**
  * Хук для React компонентов
  * @example
- * const { user, loading, error } = useAuth();
+ * const { user, isAuthenticated, isAdmin } = useAuthStatus();
  */
 export function useAuthStatus() {
   const user = getCurrentUser();
@@ -161,4 +298,3 @@ export function useAuthStatus() {
     isBarista: user?.role === 'barista',
   };
 }
-

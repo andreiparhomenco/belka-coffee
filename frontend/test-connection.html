@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест подключения к Supabase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .result {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Тест подключения к Supabase</h1>
+    
+    <div id="config" class="result info"></div>
+    
+    <button onclick="testConnection()">Проверить подключение</button>
+    <button onclick="testAuth()">Проверить авторизацию</button>
+    
+    <div id="result"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://jcrjcglfzrhcghiqfltp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_55fEkUzyTswveKoQRbyopA_H0Abc7bi';
+
+        document.getElementById('config').innerHTML = `
+<strong>Конфигурация:</strong>
+URL: ${SUPABASE_URL}
+ANON KEY: ${SUPABASE_ANON_KEY.substring(0, 20)}...
+        `;
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        window.testConnection = async function() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="result info">⏳ Проверка подключения...</div>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    result.innerHTML = `<div class="result error">❌ Ошибка подключения:\n${error.message}</div>`;
+                } else {
+                    result.innerHTML = `<div class="result success">✅ Подключение успешно!\nТаблица users доступна.</div>`;
+                }
+            } catch (err) {
+                result.innerHTML = `<div class="result error">❌ Ошибка:\n${err.message}</div>`;
+            }
+        };
+
+        window.testAuth = async function() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="result info">⏳ Попытка входа...</div>';
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'admin@belka.coffee',
+                    password: 'BelkaAdmin2024'
+                });
+                
+                if (error) {
+                    result.innerHTML = `<div class="result error">❌ Ошибка авторизации:\n${error.message}\n\nКод: ${error.status}</div>`;
+                } else {
+                    result.innerHTML = `<div class="result success">✅ Авторизация успешна!\n\nEmail: ${data.user.email}\nID: ${data.user.id}</div>`;
+                }
+            } catch (err) {
+                result.innerHTML = `<div class="result error">❌ Ошибка:\n${err.message}</div>`;
+            }
+        };
+    </script>
+</body>
+</html>
+

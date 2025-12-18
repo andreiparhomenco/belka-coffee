@@ -1,0 +1,355 @@
+/* ============================================
+ * Reports Styles
+ * Created: 2025-12-18
+ * ============================================ */
+
+.reports {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.reports.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* Header */
+.reports-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.reports-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.reports-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #999);
+}
+
+/* Week Selector */
+.week-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.week-info {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0 16px;
+}
+
+/* Report Type Selector */
+.report-type-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.report-type-selector button {
+  padding: 12px 24px;
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  background: var(--tg-theme-bg-color, #fff);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.report-type-selector button:hover {
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+}
+
+.report-type-selector button.active {
+  background: var(--tg-theme-button-color, #2481cc);
+  color: var(--tg-theme-button-text-color, #fff);
+  border-color: var(--tg-theme-button-color, #2481cc);
+}
+
+/* Weekly Report */
+.weekly-report {
+  margin-bottom: 32px;
+}
+
+.weekly-report h3 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  border-radius: 12px;
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.summary-icon {
+  font-size: 40px;
+}
+
+.summary-content {
+  flex: 1;
+}
+
+.summary-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--tg-theme-text-color, #000);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #999);
+}
+
+/* Barista Report */
+.barista-report {
+  margin-bottom: 32px;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.report-actions h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.barista-table-container {
+  overflow-x: auto;
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.barista-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.barista-table thead {
+  background: var(--tg-theme-bg-color, #fff);
+}
+
+.barista-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.barista-table td {
+  padding: 12px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.barista-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.barista-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.barista-name {
+  font-weight: 600;
+}
+
+.turnover {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.avg-turnover {
+  color: #2196f3;
+  font-weight: 500;
+}
+
+/* Progress Bar Mini */
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar-mini {
+  flex: 1;
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill-mini {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* Turnover Report */
+.turnover-report {
+  margin-bottom: 32px;
+}
+
+.turnover-report h3 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.turnover-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.turnover-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.turnover-label {
+  min-width: 150px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.turnover-bar-wrapper {
+  flex: 1;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 40px;
+}
+
+.turnover-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  min-width: 80px;
+  transition: width 0.5s ease;
+}
+
+.turnover-value {
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reports {
+    padding: 16px;
+  }
+
+  .reports-header h2 {
+    font-size: 22px;
+  }
+
+  .week-selector {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .week-selector button {
+    width: 100%;
+  }
+
+  .report-type-selector {
+    flex-direction: column;
+  }
+
+  .report-type-selector button {
+    width: 100%;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .report-actions button {
+    width: 100%;
+  }
+
+  .barista-table-container {
+    font-size: 12px;
+  }
+
+  .barista-table th,
+  .barista-table td {
+    padding: 8px;
+  }
+
+  .turnover-label {
+    min-width: 100px;
+    font-size: 12px;
+  }
+
+  .turnover-value {
+    font-size: 12px;
+  }
+}
+

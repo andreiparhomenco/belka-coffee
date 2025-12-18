@@ -193,10 +193,27 @@ body {
   position: sticky;
   top: 81px; /* высота header */
   z-index: 99;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tg-theme-hint-color) transparent;
+}
+
+.app-nav::-webkit-scrollbar {
+  height: 6px;
+}
+
+.app-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-nav::-webkit-scrollbar-thumb {
+  background: var(--tg-theme-hint-color);
+  border-radius: 3px;
 }
 
 .nav-btn {
-  flex: 1;
+  flex-shrink: 0;
+  min-width: 100px;
   padding: var(--spacing-md);
   border: 1px solid var(--tg-theme-hint-color);
   background: var(--tg-theme-secondary-bg-color);
@@ -206,6 +223,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .nav-btn:hover {
@@ -330,6 +348,16 @@ body {
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--tg-theme-hint-color);
+}
+
+.btn-danger {
+  background: var(--error-color);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* Responsive */
