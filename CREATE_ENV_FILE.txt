@@ -1,0 +1,27 @@
+# ==============================================
+# СКОПИРУЙТЕ ЭТОТ ТЕКСТ В ФАЙЛ frontend/.env
+# ==============================================
+
+# Supabase Configuration
+VITE_SUPABASE_URL=https://jcrjcglfzrhcghiqfltp.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_55fEkUzyTswveKoQRbyopA_H0Abc7bi
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_QrbQGjNJsOvrH2I5fxsNKA_4FnTgg2p
+PROJECT_REF=jcrjcglfzrhcghiqfltp
+
+# Telegram Bot
+VITE_BOT_USERNAME=belka_coffee_bot
+BOT_TOKEN=6491741079:AAFEocyaLsgVLQ7kizvlubGxkMJCxLyqGuY
+
+
+# ==============================================
+# КАК СОЗДАТЬ .env ФАЙЛ:
+# ==============================================
+# 
+# 1. Откройте папку frontend/
+# 2. Создайте новый файл с именем: .env
+#    (ВАЖНО: точка в начале!)
+# 3. Скопируйте туда всё, что выше этой линии
+# 4. Сохраните файл
+# 5. Запустите: npm run dev
+#
+
