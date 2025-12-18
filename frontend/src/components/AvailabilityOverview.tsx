@@ -16,7 +16,7 @@ interface BaristaAvailability {
 }
 
 interface AvailabilityOverviewProps {
-  weekStart?: Date;
+  weekStart?: Date | string;
 }
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -31,7 +31,7 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
 
-  const currentWeekStart = getWeekStart(weekStart);
+  const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
 
   useEffect(() => {
     loadAvailability();

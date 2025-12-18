@@ -9,16 +9,20 @@ import { useTelegram } from './hooks/useTelegram';
 import { autoAuthFromTelegram, getCurrentUser, logout, type User } from './lib/auth';
 import { AvailabilityCalendar } from './components/AvailabilityCalendar';
 import { AvailabilityOverview } from './components/AvailabilityOverview';
+import { ScheduleGenerator } from './components/ScheduleGenerator';
+import { ScheduleView } from './components/ScheduleView';
 import './App.css';
 import './components/AvailabilityCalendar.css';
 import './components/AvailabilityOverview.css';
+import './components/ScheduleGenerator.css';
+import './components/ScheduleView.css';
 
 function App() {
   const { webApp, user: tgUser } = useTelegram();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'availability' | 'profile'>('availability');
+  const [view, setView] = useState<'availability' | 'schedule' | 'profile'>('availability');
 
   // Авторизация при загрузке
   useEffect(() => {
@@ -122,6 +126,12 @@ function App() {
           📅 Доступность
         </button>
         <button
+          className={`nav-btn ${view === 'schedule' ? 'active' : ''}`}
+          onClick={() => setView('schedule')}
+        >
+          📆 График
+        </button>
+        <button
           className={`nav-btn ${view === 'profile' ? 'active' : ''}`}
           onClick={() => setView('profile')}
         >
@@ -141,6 +151,23 @@ function App() {
                   console.log('Доступность сохранена');
                 }}
               />
+            )}
+          </>
+        )}
+
+        {view === 'schedule' && (
+          <>
+            {user.role === 'admin' ? (
+              <>
+                <ScheduleGenerator
+                  onGenerate={() => {
+                    console.log('График сгенерирован');
+                  }}
+                />
+                <ScheduleView />
+              </>
+            ) : (
+              <ScheduleView />
             )}
           </>
         )}

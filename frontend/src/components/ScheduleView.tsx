@@ -19,7 +19,7 @@ interface Shift {
 }
 
 interface ScheduleViewProps {
-  weekStart?: Date;
+  weekStart?: Date | string;
   onEdit?: (shiftId: string) => void;
 }
 
@@ -35,7 +35,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
 
-  const currentWeekStart = getWeekStart(weekStart);
+  const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
   const user = getCurrentUser();
   const isAdmin = user?.role === 'admin';
 

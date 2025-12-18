@@ -4,8 +4,6 @@
 // Created: 2025-12-15
 // ============================================
 
-import { supabase } from './supabaseClient';
-
 const TELEGRAM_AUTH_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/telegram-auth`;
 
 export interface User {

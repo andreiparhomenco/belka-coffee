@@ -17,7 +17,7 @@ interface TimeSlot {
 }
 
 interface AvailabilityCalendarProps {
-  weekStart?: Date;
+  weekStart?: Date | string;
   onSave?: () => void;
 }
 
@@ -35,7 +35,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const currentWeekStart = getWeekStart(weekStart);
+  const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
   const user = getCurrentUser();
 
   // Загрузка шаблона работы кофейни

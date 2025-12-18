@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { getWeekStart } from '../lib/helpers';
 
 interface ScheduleGeneratorProps {
-  weekStart?: Date;
+  weekStart?: Date | string;
   onGenerate?: (result: any) => void;
 }
 
@@ -22,7 +22,7 @@ export const ScheduleGenerator: React.FC<ScheduleGeneratorProps> = ({
   const [maxHours, setMaxHours] = useState(40);
   const [minHours, setMinHours] = useState(10);
 
-  const currentWeekStart = getWeekStart(weekStart);
+  const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
 
   const handleGenerate = async () => {
     setGenerating(true);

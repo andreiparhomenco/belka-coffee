@@ -5,7 +5,7 @@
 // ============================================
 
 import { supabase } from '../supabaseClient';
-import { validateAvailability, type TimeSlot } from '../validation';
+import { type TimeSlot } from '../validation';
 
 export interface AvailabilitySlot {
   id?: string;

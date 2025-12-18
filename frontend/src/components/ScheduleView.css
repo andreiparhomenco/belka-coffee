@@ -1,0 +1,362 @@
+/* ============================================
+ * ScheduleView Styles
+ * Created: 2025-12-18
+ * ============================================ */
+
+.schedule-view {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.schedule-view.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+/* Header */
+.schedule-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.schedule-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Barista Summary */
+.barista-summary {
+  margin-bottom: 24px;
+}
+
+.barista-summary h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.summary-name {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-item.confirmed {
+  color: #4caf50;
+}
+
+.stat-item.planned {
+  color: #ff9800;
+}
+
+/* Schedule Grid */
+.schedule-grid {
+  overflow-x: auto;
+  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.grid-header-row {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-bottom: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.hour-header {
+  padding: 12px 8px;
+  font-weight: 600;
+  font-size: 12px;
+  text-align: center;
+  border-right: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.day-header {
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  border-right: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.day-header:last-child {
+  border-right: none;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.grid-row:last-child {
+  border-bottom: none;
+}
+
+.hour-label {
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  background: var(--tg-theme-secondary-bg-color, #fafafa);
+  border-right: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Grid Cells */
+.grid-cell {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-right: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  transition: all 0.2s ease;
+  padding: 4px;
+}
+
+.grid-cell:last-child {
+  border-right: none;
+}
+
+.grid-cell.empty {
+  background: #ffffff;
+}
+
+.grid-cell.empty:hover {
+  background: #f9f9f9;
+}
+
+.grid-cell.has-shift {
+  background: #e3f2fd;
+}
+
+.grid-cell.has-shift:hover {
+  background: #bbdefb;
+}
+
+.grid-cell.confirmed {
+  background: #c8e6c9;
+}
+
+.grid-cell.confirmed:hover {
+  background: #a5d6a7;
+}
+
+.grid-cell.selected {
+  outline: 3px solid var(--tg-theme-button-color, #2481cc);
+  outline-offset: -3px;
+  z-index: 5;
+}
+
+.shift-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.barista-name {
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000);
+}
+
+.check {
+  color: #4caf50;
+  font-size: 14px;
+}
+
+/* Shift Details */
+.shift-details {
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 2px solid var(--tg-theme-button-color, #2481cc);
+}
+
+.shift-details h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.details-content p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.details-content strong {
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.planned {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.completed {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.details-content .btn {
+  margin-top: 16px;
+  margin-right: 8px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  border-radius: 12px;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  color: var(--tg-theme-hint-color, #999);
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px;
+  background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+  border-radius: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.legend-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.legend-color.has-shift {
+  background: #e3f2fd;
+}
+
+.legend-color.confirmed {
+  background: #c8e6c9;
+}
+
+.legend-color.empty {
+  background: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-view {
+    padding: 12px;
+  }
+
+  .schedule-header h2 {
+    font-size: 20px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .grid-header-row,
+  .grid-row {
+    grid-template-columns: 50px repeat(7, minmax(45px, 1fr));
+  }
+
+  .hour-header,
+  .hour-label {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .grid-cell {
+    min-height: 36px;
+  }
+
+  .shift-info {
+    font-size: 10px;
+  }
+
+  .shift-details {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .legend {
+    gap: 12px;
+  }
+
+  .legend-item {
+    font-size: 12px;
+  }
+}
+
