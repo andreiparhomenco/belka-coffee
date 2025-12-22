@@ -14,7 +14,6 @@ interface TimeSlot {
   day: number;
   hour: number;
   isSelected: boolean;
-  isShopOpen: boolean;
 }
 
 interface ShopTemplateSlot {
@@ -127,17 +126,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         // Используем только часы работы кофейни
         for (const hour of shopHours) {
           const key = `${day}-${hour}`;
-          const isShopOpen = shopTemplate.get(key) || false;
-          
-          // Добавляем слот только если кофейня работает в этот час
-          if (isShopOpen) {
-            newSlots.push({
-              day,
-              hour,
-              isSelected: selectedSlots.has(key),
-              isShopOpen: true,
-            });
-          }
+          newSlots.push({
+            day,
+            hour,
+            isSelected: selectedSlots.has(key),
+          });
         }
       }
 
@@ -166,7 +159,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const selectDay = (day: number) => {
     setSlots(prev =>
       prev.map(slot =>
-        slot.day === day && slot.isShopOpen
+        slot.day === day
           ? { ...slot, isSelected: true }
           : slot
       )
@@ -185,9 +178,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   const selectAll = () => {
     setSlots(prev =>
-      prev.map(slot =>
-        slot.isShopOpen ? { ...slot, isSelected: true } : slot
-      )
+      prev.map(slot => ({ ...slot, isSelected: true }))
     );
     setSuccess(false);
   };
@@ -347,19 +338,13 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
               return (
                 <div
                   key={`${day}-${hour}`}
-                  className={`calendar-cell ${
-                    slot.isSelected ? 'selected' : ''
-                  } ${slot.isShopOpen ? 'shop-open' : 'shop-closed'}`}
-                  onClick={() => slot.isShopOpen && toggleSlot(day, hour)}
-                  title={
-                    slot.isShopOpen
-                      ? slot.isSelected
-                        ? 'Нажмите чтобы снять выбор'
-                        : 'Нажмите чтобы выбрать'
-                      : 'Кофейня закрыта'
-                  }
+                  className={`calendar-cell ${slot.isSelected ? 'selected' : ''}`}
+                  onClick={() => toggleSlot(day, hour)}
+                  title={slot.isSelected ? 'Я доступен' : 'Я НЕ доступен'}
                 >
-                  {slot.isSelected && '✓'}
+                  {slot.isSelected && (
+                    <div className="check-mark">✓</div>
+                  )}
                 </div>
               );
             })}
@@ -367,26 +352,22 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         ))}
       </div>
 
-      <div className="calendar-footer">
-        <div className="legend">
-          <div className="legend-item">
-            <span className="legend-color shop-open"></span>
-            <span>Кофейня работает</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color shop-closed"></span>
-            <span>Кофейня закрыта</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color selected"></span>
-            <span>Я доступен</span>
-          </div>
+      <div className="calendar-legend">
+        <div className="legend-item">
+          <div className="legend-color available"></div>
+          <span>Я доступен / могу работать</span>
         </div>
+        <div className="legend-item">
+          <div className="legend-color unavailable"></div>
+          <span>Я НЕ доступен / не могу работать</span>
+        </div>
+      </div>
 
+      <div className="calendar-actions">
         <button
           onClick={saveAvailability}
           disabled={saving}
-          className="btn btn-primary btn-large"
+          className="btn btn-primary"
         >
           {saving ? '💾 Сохранение...' : '💾 Сохранить доступность'}
         </button>
