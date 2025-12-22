@@ -4,16 +4,23 @@
 // Created: 2025-12-18
 // ============================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getCurrentUser } from '../lib/auth';
 import { getWeekStart } from '../lib/helpers';
+import './AvailabilityCalendar.css';
 
 interface TimeSlot {
   day: number;
   hour: number;
   isSelected: boolean;
-  isShopOpen: boolean; // Работает ли кофейня в этот час
+  isShopOpen: boolean;
+}
+
+interface ShopTemplateSlot {
+  day_of_week: number;
+  hour: number;
+  is_active: boolean;
 }
 
 interface AvailabilityCalendarProps {
@@ -117,14 +124,20 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       );
 
       for (let day = 0; day < 7; day++) {
-        for (let hour = 0; hour < 24; hour++) {
+        // Используем только часы работы кофейни
+        for (const hour of shopHours) {
           const key = `${day}-${hour}`;
-          newSlots.push({
-            day,
-            hour,
-            isSelected: selectedSlots.has(key),
-            isShopOpen: shopTemplate.get(key) || false,
-          });
+          const isShopOpen = shopTemplate.get(key) || false;
+          
+          // Добавляем слот только если кофейня работает в этот час
+          if (isShopOpen) {
+            newSlots.push({
+              day,
+              hour,
+              isSelected: selectedSlots.has(key),
+              isShopOpen: true,
+            });
+          }
         }
       }
 
