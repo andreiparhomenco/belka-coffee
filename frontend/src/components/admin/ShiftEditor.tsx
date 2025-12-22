@@ -11,7 +11,6 @@ import { getWeekStart, formatDate } from '../../lib/helpers';
 import './ShiftEditor.css';
 
 const DAYS = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 interface ShiftCell {
   dayOfWeek: number;
@@ -23,6 +22,7 @@ export const ShiftEditor: React.FC = () => {
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [shopHours, setShopHours] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCell, setSelectedCell] = useState<ShiftCell | null>(null);
@@ -45,7 +45,7 @@ export const ShiftEditor: React.FC = () => {
         : currentWeekStart;
       const weekStartStr = weekStartDate.toISOString().split('T')[0];
 
-      const [shiftsRes, usersRes] = await Promise.all([
+      const [shiftsRes, usersRes, shopTemplateRes] = await Promise.all([
         supabase
           .from('shifts')
           .select('*')
@@ -57,13 +57,24 @@ export const ShiftEditor: React.FC = () => {
           .select('*')
           .eq('role', 'barista')
           .order('name'),
+        
+        supabase
+          .from('shop_template')
+          .select('hour')
+          .eq('is_active', true)
+          .order('hour'),
       ]);
 
       if (shiftsRes.error) throw shiftsRes.error;
       if (usersRes.error) throw usersRes.error;
+      if (shopTemplateRes.error) throw shopTemplateRes.error;
 
       setShifts(shiftsRes.data || []);
       setUsers(usersRes.data || []);
+      
+      // Извлекаем уникальные часы работы кофейни
+      const hours = Array.from(new Set(shopTemplateRes.data?.map(slot => slot.hour) || [])).sort((a, b) => a - b);
+      setShopHours(hours.length > 0 ? hours : Array.from({ length: 24 }, (_, i) => i));
     } catch (err) {
       console.error('Ошибка загрузки данных:', err);
       setError('Не удалось загрузить данные');
@@ -210,6 +221,11 @@ export const ShiftEditor: React.FC = () => {
       {/* Instructions */}
       <div className="instructions">
         <p>💡 <strong>Инструкция:</strong> Нажмите на любую ячейку, чтобы назначить или изменить смену</p>
+        {shopHours.length > 0 && (
+          <p className="shop-hours-info">
+            🏪 <strong>Часы работы:</strong> {shopHours[0]}:00 - {shopHours[shopHours.length - 1] + 1}:00
+          </p>
+        )}
       </div>
 
       {/* Schedule Grid */}
@@ -226,35 +242,41 @@ export const ShiftEditor: React.FC = () => {
           </div>
 
           {/* Rows for each hour */}
-          {HOURS.map((hour) => (
-            <div key={hour} className="grid-row">
-              <div className="hour-cell">{hour}:00</div>
-              {[1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => {
-                const shift = shifts.find(
-                  (s) => s.day_of_week === dayOfWeek && s.hour === hour
-                );
+          {shopHours.length > 0 ? (
+            shopHours.map((hour) => (
+              <div key={hour} className="grid-row">
+                <div className="hour-cell">{hour}:00</div>
+                {[1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => {
+                  const shift = shifts.find(
+                    (s) => s.day_of_week === dayOfWeek && s.hour === hour
+                  );
 
-                return (
-                  <div
-                    key={dayOfWeek}
-                    className={`shift-cell ${shift ? 'has-shift' : 'empty'} ${
-                      shift?.status === 'confirmed' ? 'confirmed' : ''
-                    }`}
-                    onClick={() => handleCellClick(dayOfWeek, hour)}
-                  >
-                    {shift && (
-                      <div className="shift-info">
-                        <div className="barista-name">{getUserName(shift.user_id)}</div>
-                        <div className="shift-status">
-                          {shift.status === 'confirmed' ? '✅' : '⏳'}
+                  return (
+                    <div
+                      key={dayOfWeek}
+                      className={`shift-cell ${shift ? 'has-shift' : 'empty'} ${
+                        shift?.status === 'confirmed' ? 'confirmed' : ''
+                      }`}
+                      onClick={() => handleCellClick(dayOfWeek, hour)}
+                    >
+                      {shift && (
+                        <div className="shift-info">
+                          <div className="barista-name">{getUserName(shift.user_id)}</div>
+                          <div className="shift-status">
+                            {shift.status === 'confirmed' ? '✅' : '⏳'}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))
+          ) : (
+            <div className="empty-state">
+              <p>⚠️ Настройте график работы кофейни в разделе "Настройки"</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

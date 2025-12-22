@@ -20,12 +20,12 @@ interface AvailabilityOverviewProps {
 }
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
   weekStart = new Date(),
 }) => {
   const [baristas, setBaristas] = useState<BaristaAvailability[]>([]);
+  const [shopHours, setShopHours] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -44,27 +44,36 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
     setError(null);
 
     try {
-      // Загружаем всех бариста
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id, name')
-        .eq('role', 'barista')
-        .order('name');
+      const [usersRes, availRes, shopTemplateRes] = await Promise.all([
+        // Загружаем всех бариста
+        supabase
+          .from('users')
+          .select('id, name')
+          .eq('role', 'barista')
+          .order('name'),
 
-      if (usersError) throw usersError;
+        // Загружаем доступность для всех бариста
+        supabase
+          .from('availability')
+          .select('user_id, day_of_week, hour')
+          .eq('week_start', currentWeekStart),
+        
+        // Загружаем часы работы кофейни
+        supabase
+          .from('shop_template')
+          .select('hour')
+          .eq('is_active', true)
+          .order('hour'),
+      ]);
 
-      // Загружаем доступность для всех бариста
-      const { data: availability, error: availError } = await supabase
-        .from('availability')
-        .select('user_id, day_of_week, hour')
-        .eq('week_start', currentWeekStart);
-
-      if (availError) throw availError;
+      if (usersRes.error) throw usersRes.error;
+      if (availRes.error) throw availRes.error;
+      if (shopTemplateRes.error) throw shopTemplateRes.error;
 
       // Группируем доступность по пользователям
       const baristaMap = new Map<string, BaristaAvailability>();
 
-      users?.forEach(user => {
+      usersRes.data?.forEach(user => {
         baristaMap.set(user.id, {
           user_id: user.id,
           user_name: user.name,
@@ -73,7 +82,7 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
         });
       });
 
-      availability?.forEach(slot => {
+      availRes.data?.forEach(slot => {
         const barista = baristaMap.get(slot.user_id);
         if (barista) {
           const key = `${slot.day_of_week}-${slot.hour}`;
@@ -83,6 +92,10 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
       });
 
       setBaristas(Array.from(baristaMap.values()));
+      
+      // Извлекаем уникальные часы работы кофейни
+      const hours = Array.from(new Set(shopTemplateRes.data?.map(slot => slot.hour) || [])).sort((a, b) => a - b);
+      setShopHours(hours.length > 0 ? hours : Array.from({ length: 24 }, (_, i) => i));
     } catch (err) {
       console.error('Ошибка загрузки доступности:', err);
       setError('Не удалось загрузить доступность бариста');
@@ -157,7 +170,7 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
             ))}
           </div>
 
-          {HOURS.map(hour => (
+          {shopHours.map(hour => (
             <div key={hour} className="heatmap-row">
               <div className="hour-label">
                 {hour.toString().padStart(2, '0')}:00
@@ -254,7 +267,7 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
                   <td className="barista-name">{barista.user_name}</td>
                   <td className="total-hours">{barista.total_hours}</td>
                   {DAYS.map((_, day) => {
-                    const dayHours = HOURS.filter(hour =>
+                    const dayHours = shopHours.filter(hour =>
                       barista.availability.get(`${day}-${hour}`)
                     ).length;
                     return (

@@ -22,7 +22,6 @@ interface AvailabilityCalendarProps {
 }
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   weekStart = new Date(),
@@ -30,6 +29,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 }) => {
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [shopTemplate, setShopTemplate] = useState<Map<string, boolean>>(new Map());
+  const [shopTemplateData, setShopTemplateData] = useState<ShopTemplateSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +42,12 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart)
   );
   const [currentWeekStartDate] = useState(() => new Date(currentWeekStart));
+  
+  // Вычисляем часы работы кофейни
+  const shopHours = useMemo(() => {
+    const hours = Array.from(new Set(shopTemplateData.map(slot => slot.hour))).sort((a, b) => a - b);
+    return hours.length > 0 ? hours : Array.from({ length: 24 }, (_, i) => i);
+  }, [shopTemplateData]);
 
   // Загрузка шаблона работы кофейни
   useEffect(() => {
@@ -62,7 +68,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       const { data, error } = await supabase
         .from('shop_template')
         .select('day_of_week, hour, is_active')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .order('hour');
 
       console.log('📋 Шаблон загружен:', { data, error });
 
@@ -75,6 +82,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
       console.log('✅ Шаблон обработан, слотов:', template.size);
       setShopTemplate(template);
+      setShopTemplateData(data || []);
     } catch (err) {
       console.error('❌ Ошибка загрузки шаблона:', err);
       setError('Не удалось загрузить график работы кофейни');
@@ -314,7 +322,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           ))}
         </div>
 
-        {HOURS.map(hour => (
+        {shopHours.map(hour => (
           <div key={hour} className="calendar-row">
             <div className="hour-label">
               {hour.toString().padStart(2, '0')}:00

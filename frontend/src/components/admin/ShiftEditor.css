@@ -69,6 +69,13 @@
   color: #1565c0;
 }
 
+.shop-hours-info {
+  margin-top: 8px !important;
+  padding-top: 8px;
+  border-top: 1px solid rgba(33, 150, 243, 0.2);
+  font-size: 13px !important;
+}
+
 /* Schedule Grid */
 .schedule-grid-container {
   overflow-x: auto;

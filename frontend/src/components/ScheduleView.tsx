@@ -24,13 +24,13 @@ interface ScheduleViewProps {
 }
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export const ScheduleView: React.FC<ScheduleViewProps> = ({
   weekStart = new Date(),
   onEdit,
 }) => {
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [shopHours, setShopHours] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
@@ -50,24 +50,33 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     setError(null);
 
     try {
-      const { data, error } = await supabase
-        .from('shifts')
-        .select(`
-          id,
-          user_id,
-          day_of_week,
-          hour,
-          status,
-          users:user_id (name)
-        `)
-        .eq('week_start', currentWeekStart)
-        .neq('status', 'cancelled')
-        .order('day_of_week')
-        .order('hour');
+      const [shiftsRes, shopTemplateRes] = await Promise.all([
+        supabase
+          .from('shifts')
+          .select(`
+            id,
+            user_id,
+            day_of_week,
+            hour,
+            status,
+            users:user_id (name)
+          `)
+          .eq('week_start', currentWeekStart)
+          .neq('status', 'cancelled')
+          .order('day_of_week')
+          .order('hour'),
+        
+        supabase
+          .from('shop_template')
+          .select('hour')
+          .eq('is_active', true)
+          .order('hour'),
+      ]);
 
-      if (error) throw error;
+      if (shiftsRes.error) throw shiftsRes.error;
+      if (shopTemplateRes.error) throw shopTemplateRes.error;
 
-      const formattedShifts: Shift[] = data?.map((s: any) => ({
+      const formattedShifts: Shift[] = shiftsRes.data?.map((s: any) => ({
         id: s.id,
         user_id: s.user_id,
         user_name: s.users?.name || 'Неизвестно',
@@ -77,6 +86,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       })) || [];
 
       setShifts(formattedShifts);
+      
+      // Извлекаем уникальные часы работы кофейни
+      const hours = Array.from(new Set(shopTemplateRes.data?.map(slot => slot.hour) || [])).sort((a, b) => a - b);
+      setShopHours(hours.length > 0 ? hours : Array.from({ length: 24 }, (_, i) => i));
     } catch (err) {
       console.error('Ошибка загрузки графика:', err);
       setError('Не удалось загрузить график');
@@ -208,7 +221,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           ))}
         </div>
 
-        {HOURS.map(hour => (
+        {shopHours.map(hour => (
           <div key={hour} className="grid-row">
             <div className="hour-label">
               {hour.toString().padStart(2, '0')}:00
