@@ -31,7 +31,9 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
 
+  // getWeekStart возвращает строку, создаем Date версию для методов Date
   const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
+  const currentWeekStartDate = new Date(currentWeekStart);
 
   useEffect(() => {
     loadAvailability();
@@ -55,7 +57,7 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
       const { data: availability, error: availError } = await supabase
         .from('availability')
         .select('user_id, day_of_week, hour')
-        .eq('week_start', currentWeekStart.toISOString().split('T')[0]);
+        .eq('week_start', currentWeekStart);
 
       if (availError) throw availError;
 
@@ -124,8 +126,8 @@ export const AvailabilityOverview: React.FC<AvailabilityOverviewProps> = ({
       <div className="overview-header">
         <h2>👥 Доступность бариста</h2>
         <p className="week-info">
-          Неделя: {currentWeekStart.toLocaleDateString('ru-RU')} -{' '}
-          {new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')}
+          Неделя: {currentWeekStartDate.toLocaleDateString('ru-RU')} -{' '}
+          {new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')}
         </p>
       </div>
 

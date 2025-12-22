@@ -22,7 +22,9 @@ export const ScheduleGenerator: React.FC<ScheduleGeneratorProps> = ({
   const [maxHours, setMaxHours] = useState(40);
   const [minHours, setMinHours] = useState(10);
 
+  // getWeekStart возвращает строку (YYYY-MM-DD), создаем Date версию для отображения
   const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
+  const currentWeekStartDate = new Date(currentWeekStart);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -39,7 +41,7 @@ export const ScheduleGenerator: React.FC<ScheduleGeneratorProps> = ({
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            week_start: currentWeekStart.toISOString().split('T')[0],
+            week_start: currentWeekStart,
             options: {
               maxHoursPerBarista: maxHours,
               minHoursPerBarista: minHours,
@@ -81,7 +83,7 @@ export const ScheduleGenerator: React.FC<ScheduleGeneratorProps> = ({
       <div className="generator-header">
         <h2>🤖 Генерация графика</h2>
         <p className="week-info">
-          Неделя: {currentWeekStart.toLocaleDateString('ru-RU')}
+          Неделя: {currentWeekStartDate.toLocaleDateString('ru-RU')}
         </p>
       </div>
 

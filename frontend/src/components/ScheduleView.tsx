@@ -35,7 +35,9 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
 
+  // getWeekStart возвращает строку (YYYY-MM-DD), создаем Date версию для отображения
   const currentWeekStart = getWeekStart(typeof weekStart === 'string' ? new Date(weekStart) : weekStart);
+  const currentWeekStartDate = new Date(currentWeekStart);
   const user = getCurrentUser();
   const isAdmin = user?.role === 'admin';
 
@@ -58,7 +60,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           status,
           users:user_id (name)
         `)
-        .eq('week_start', currentWeekStart.toISOString().split('T')[0])
+        .eq('week_start', currentWeekStart)
         .neq('status', 'cancelled')
         .order('day_of_week')
         .order('hour');
@@ -168,7 +170,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       <div className="schedule-header">
         <h2>📅 График смен</h2>
         <p className="week-info">
-          Неделя: {currentWeekStart.toLocaleDateString('ru-RU')}
+          Неделя: {currentWeekStartDate.toLocaleDateString('ru-RU')}
         </p>
       </div>
 
