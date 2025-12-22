@@ -8,11 +8,17 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import './Settings.css';
 
-interface ShopTemplate {
+interface ShopTemplateSlot {
   id: string;
   day_of_week: number;
-  open_hour: number;
-  close_hour: number;
+  hour: number;
+  is_active: boolean;
+}
+
+interface DaySchedule {
+  day_of_week: number;
+  start_hour: number;
+  end_hour: number;
   is_active: boolean;
 }
 
@@ -36,7 +42,8 @@ const DAYS_FULL = [
 ];
 
 export const Settings: React.FC = () => {
-  const [shopTemplates, setShopTemplates] = useState<ShopTemplate[]>([]);
+  const [shopTemplateSlots, setShopTemplateSlots] = useState<ShopTemplateSlot[]>([]);
+  const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
     minHoursPerBarista: 20,
     maxHoursPerBarista: 40,
@@ -46,6 +53,7 @@ export const Settings: React.FC = () => {
     scheduleGenerationDay: 5, // Пятница
   });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
@@ -58,18 +66,41 @@ export const Settings: React.FC = () => {
     setError(null);
 
     try {
-      // Загрузка шаблона кофейни
-      const { data: templates, error: templatesError } = await supabase
+      // Загрузка всех слотов шаблона кофейни
+      const { data: slots, error: slotsError } = await supabase
         .from('shop_template')
         .select('*')
-        .order('day_of_week');
+        .order('day_of_week')
+        .order('hour');
 
-      if (templatesError) throw templatesError;
+      if (slotsError) throw slotsError;
 
-      setShopTemplates(templates || []);
+      setShopTemplateSlots(slots || []);
 
-      // Загрузка системных настроек (в реальном приложении это может быть отдельная таблица)
-      // Для демонстрации используем локальные значения
+      // Конвертируем слоты в расписание по дням (группируем)
+      const schedules: DaySchedule[] = [];
+      for (let day = 0; day <= 6; day++) {
+        const daySlots = (slots || []).filter(s => s.day_of_week === day && s.is_active);
+        if (daySlots.length > 0) {
+          const hours = daySlots.map(s => s.hour).sort((a, b) => a - b);
+          schedules.push({
+            day_of_week: day,
+            start_hour: Math.min(...hours),
+            end_hour: Math.max(...hours) + 1, // +1 потому что конечный час не включается
+            is_active: true,
+          });
+        } else {
+          schedules.push({
+            day_of_week: day,
+            start_hour: 8,
+            end_hour: 20,
+            is_active: false,
+          });
+        }
+      }
+      setDaySchedules(schedules);
+
+      // Загрузка системных настроек
       const savedSettings = localStorage.getItem('systemSettings');
       if (savedSettings) {
         setSystemSettings(JSON.parse(savedSettings));
@@ -82,47 +113,60 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleUpdateTemplate = async (templateId: string, field: 'open_hour' | 'close_hour' | 'is_active', value: number | boolean) => {
-    try {
-      const { error } = await supabase
-        .from('shop_template')
-        .update({ [field]: value })
-        .eq('id', templateId);
-
-      if (error) throw error;
-
-      setShopTemplates((prev) =>
-        prev.map((t) => (t.id === templateId ? { ...t, [field]: value } : t))
-      );
-
-      setSaveStatus('✅ Сохранено');
-      setTimeout(() => setSaveStatus(null), 2000);
-    } catch (err: any) {
-      console.error('Ошибка обновления шаблона:', err);
-      alert(`❌ Ошибка: ${err.message}`);
-    }
+  const handleUpdateDaySchedule = (dayOfWeek: number, field: 'start_hour' | 'end_hour' | 'is_active', value: number | boolean) => {
+    setDaySchedules(prev =>
+      prev.map(schedule =>
+        schedule.day_of_week === dayOfWeek
+          ? { ...schedule, [field]: value }
+          : schedule
+      )
+    );
   };
 
-  const handleAddTemplate = async (dayOfWeek: number) => {
+  const handleSaveDaySchedule = async (dayOfWeek: number) => {
+    setSaving(true);
     try {
-      const { data, error } = await supabase
+      const schedule = daySchedules.find(s => s.day_of_week === dayOfWeek);
+      if (!schedule) throw new Error('Расписание не найдено');
+
+      // Удаляем все старые слоты для этого дня
+      const { error: deleteError } = await supabase
         .from('shop_template')
-        .insert({
-          day_of_week: dayOfWeek,
-          open_hour: 8,
-          close_hour: 20,
-          is_active: true,
-        })
-        .select()
-        .single();
+        .delete()
+        .eq('day_of_week', dayOfWeek);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
-      setShopTemplates((prev) => [...prev, data].sort((a, b) => a.day_of_week - b.day_of_week));
-      alert('✅ День добавлен');
+      // Если день активен, создаем новые слоты
+      if (schedule.is_active) {
+        const newSlots = [];
+        for (let hour = schedule.start_hour; hour < schedule.end_hour; hour++) {
+          newSlots.push({
+            day_of_week: dayOfWeek,
+            hour: hour,
+            is_active: true,
+          });
+        }
+
+        if (newSlots.length > 0) {
+          const { error: insertError } = await supabase
+            .from('shop_template')
+            .insert(newSlots);
+
+          if (insertError) throw insertError;
+        }
+      }
+
+      setSaveStatus(`✅ ${DAYS_FULL[dayOfWeek]} сохранено`);
+      setTimeout(() => setSaveStatus(null), 2000);
+
+      // Перезагружаем данные
+      await loadSettings();
     } catch (err: any) {
-      console.error('Ошибка добавления дня:', err);
+      console.error('Ошибка сохранения расписания:', err);
       alert(`❌ Ошибка: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -172,13 +216,15 @@ export const Settings: React.FC = () => {
       <div className="settings-section">
         <h3>🏪 График работы кофейни</h3>
         <p className="section-description">
-          Настройте часы работы кофейни для каждого дня недели
+          Настройте часы работы кофейни для каждого дня недели. Например: 8:00 - 20:30
         </p>
 
         <div className="shop-template-list">
           {DAYS_FULL.map((dayName, index) => {
-            const dayOfWeek = index + 1;
-            const template = shopTemplates.find((t) => t.day_of_week === dayOfWeek);
+            const dayOfWeek = index;
+            const schedule = daySchedules.find((s) => s.day_of_week === dayOfWeek);
+
+            if (!schedule) return null;
 
             return (
               <div key={dayOfWeek} className="template-item">
@@ -186,57 +232,65 @@ export const Settings: React.FC = () => {
                   <strong>{dayName}</strong>
                 </div>
 
-                {template ? (
-                  <>
-                    <div className="template-hours">
-                      <label>Открытие:</label>
+                <div className="template-controls">
+                  <div className="template-active">
+                    <label>
                       <input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={template.open_hour}
+                        type="checkbox"
+                        checked={schedule.is_active}
                         onChange={(e) =>
-                          handleUpdateTemplate(template.id, 'open_hour', Number(e.target.value))
+                          handleUpdateDaySchedule(dayOfWeek, 'is_active', e.target.checked)
                         }
                       />
-                      <label>Закрытие:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={template.close_hour}
-                        onChange={(e) =>
-                          handleUpdateTemplate(template.id, 'close_hour', Number(e.target.value))
-                        }
-                      />
-                    </div>
-
-                    <div className="template-active">
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={template.is_active}
-                          onChange={(e) =>
-                            handleUpdateTemplate(template.id, 'is_active', e.target.checked)
-                          }
-                        />
-                        <span>Активен</span>
-                      </label>
-                    </div>
-                  </>
-                ) : (
-                  <div className="template-empty">
-                    <button
-                      onClick={() => handleAddTemplate(dayOfWeek)}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      ➕ Добавить день
-                    </button>
+                      <span>Работает</span>
+                    </label>
                   </div>
-                )}
+
+                  {schedule.is_active && (
+                    <div className="template-hours">
+                      <label>С:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={schedule.start_hour}
+                        onChange={(e) =>
+                          handleUpdateDaySchedule(dayOfWeek, 'start_hour', Number(e.target.value))
+                        }
+                        className="hour-input"
+                      />
+                      <span>:00</span>
+                      
+                      <label>До:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="24"
+                        value={schedule.end_hour}
+                        onChange={(e) =>
+                          handleUpdateDaySchedule(dayOfWeek, 'end_hour', Number(e.target.value))
+                        }
+                        className="hour-input"
+                      />
+                      <span>:00</span>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleSaveDaySchedule(dayOfWeek)}
+                    disabled={saving}
+                    className="btn btn-primary btn-sm"
+                  >
+                    {saving ? '⏳' : '💾'} Сохранить
+                  </button>
+                </div>
               </div>
             );
           })}
+        </div>
+
+        <div className="info-box">
+          <p>💡 <strong>Подсказка:</strong> Если кофейня работает с 8:00 до 20:30, укажите "С: 8" и "До: 21"</p>
         </div>
       </div>
 
