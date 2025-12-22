@@ -118,8 +118,23 @@
   font-weight: 600;
 }
 
+.minute-input,
+.template-hours select {
+  width: 60px !important;
+  padding: 6px 4px;
+  border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 600;
+  background: var(--tg-theme-bg-color, #fff);
+  cursor: pointer;
+}
+
 .hour-input:focus,
-.template-hours input:focus {
+.template-hours input:focus,
+.minute-input:focus,
+.template-hours select:focus {
   outline: none;
   border-color: var(--tg-theme-button-color, #2481cc);
 }

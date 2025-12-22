@@ -18,7 +18,9 @@ interface ShopTemplateSlot {
 interface DaySchedule {
   day_of_week: number;
   start_hour: number;
+  start_minute: number;
   end_hour: number;
+  end_minute: number;
   is_active: boolean;
 }
 
@@ -83,17 +85,24 @@ export const Settings: React.FC = () => {
         const daySlots = (slots || []).filter(s => s.day_of_week === day && s.is_active);
         if (daySlots.length > 0) {
           const hours = daySlots.map(s => s.hour).sort((a, b) => a - b);
+          const minHour = Math.min(...hours);
+          const maxHour = Math.max(...hours);
+          
           schedules.push({
             day_of_week: day,
-            start_hour: Math.min(...hours),
-            end_hour: Math.max(...hours) + 1, // +1 потому что конечный час не включается
+            start_hour: minHour,
+            start_minute: 0, // Начало всегда с :00
+            end_hour: maxHour,
+            end_minute: 30, // По умолчанию конец в :30 (последний слот + 30 минут)
             is_active: true,
           });
         } else {
           schedules.push({
             day_of_week: day,
             start_hour: 8,
+            start_minute: 0,
             end_hour: 20,
+            end_minute: 30,
             is_active: false,
           });
         }
@@ -113,7 +122,7 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleUpdateDaySchedule = (dayOfWeek: number, field: 'start_hour' | 'end_hour' | 'is_active', value: number | boolean) => {
+  const handleUpdateDaySchedule = (dayOfWeek: number, field: 'start_hour' | 'start_minute' | 'end_hour' | 'end_minute' | 'is_active', value: number | boolean) => {
     setDaySchedules(prev =>
       prev.map(schedule =>
         schedule.day_of_week === dayOfWeek
@@ -140,7 +149,13 @@ export const Settings: React.FC = () => {
       // Если день активен, создаем новые слоты
       if (schedule.is_active) {
         const newSlots = [];
-        for (let hour = schedule.start_hour; hour < schedule.end_hour; hour++) {
+        
+        // Определяем последний час с учетом минут
+        // Если конец в 20:30, то последний слот - 20:00
+        // Если конец в 21:00, то последний слот - 20:00
+        const lastHour = schedule.end_minute > 0 ? schedule.end_hour : schedule.end_hour - 1;
+        
+        for (let hour = schedule.start_hour; hour <= lastHour; hour++) {
           newSlots.push({
             day_of_week: dayOfWeek,
             hour: hour,
@@ -259,20 +274,40 @@ export const Settings: React.FC = () => {
                         }
                         className="hour-input"
                       />
-                      <span>:00</span>
+                      <span>:</span>
+                      <select
+                        value={schedule.start_minute}
+                        onChange={(e) =>
+                          handleUpdateDaySchedule(dayOfWeek, 'start_minute', Number(e.target.value))
+                        }
+                        className="minute-input"
+                      >
+                        <option value={0}>00</option>
+                        <option value={30}>30</option>
+                      </select>
                       
-                      <label>До:</label>
+                      <label style={{ marginLeft: '12px' }}>До:</label>
                       <input
                         type="number"
-                        min="1"
-                        max="24"
+                        min="0"
+                        max="23"
                         value={schedule.end_hour}
                         onChange={(e) =>
                           handleUpdateDaySchedule(dayOfWeek, 'end_hour', Number(e.target.value))
                         }
                         className="hour-input"
                       />
-                      <span>:00</span>
+                      <span>:</span>
+                      <select
+                        value={schedule.end_minute}
+                        onChange={(e) =>
+                          handleUpdateDaySchedule(dayOfWeek, 'end_minute', Number(e.target.value))
+                        }
+                        className="minute-input"
+                      >
+                        <option value={0}>00</option>
+                        <option value={30}>30</option>
+                      </select>
                     </div>
                   )}
 
@@ -290,7 +325,7 @@ export const Settings: React.FC = () => {
         </div>
 
         <div className="info-box">
-          <p>💡 <strong>Подсказка:</strong> Если кофейня работает с 8:00 до 20:30, укажите "С: 8" и "До: 21"</p>
+          <p>💡 <strong>Подсказка:</strong> Теперь вы можете указать точное время с минутами. Например: с 8:00 до 20:30</p>
         </div>
       </div>
 
