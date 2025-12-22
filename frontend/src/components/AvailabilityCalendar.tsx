@@ -204,7 +204,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         .from('availability')
         .delete()
         .eq('user_id', user.id)
-        .eq('week_start', currentWeekStart.toISOString().split('T')[0]);
+        .eq('week_start', currentWeekStart);
 
       if (deleteError) throw deleteError;
 
